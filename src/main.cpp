@@ -36,6 +36,8 @@ void setup() {
     Serial.println(F("Smart Robot Car V4.0 - System Ready"));
 }
 
+int timer = 0;
+
 /* Main program loop / 主程序循环 */
 void loop() {
     // Reset watchdog timer to prevent system reset / 重置看门狗定时器以防止系统复位
@@ -49,6 +51,13 @@ void loop() {
     // Update timers and execute current state / 更新定时器并执行当前状态
     applicationFunctionSet.updateTimer();
     applicationFunctionSet.checkState();
+
+    timer ++;
+
+    if(timer == 1000)
+    {
+        Serial.println("UPdate!");
+    }
 }
 
 /* Serial event handler for processing incoming commands / 用于处理传入命令的串行事件处理程序 */
