@@ -4,7 +4,7 @@
 /**
  * @brief MPU6050 Sensor Class / MPU6050 传感器类
  */
-class MPU6050_IMU {
+class IMU {
 public:
     /**
      * @brief Initialize MPU6050 sensor / 初始化 MPU6050 传感器

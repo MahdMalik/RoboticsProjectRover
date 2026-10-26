@@ -7,13 +7,13 @@
  */
 #pragma once
 
-#include <FastLED.h>
+#include "Utils.h"
 #include <Servo.h>
 
 /**
  * @brief Servo Control Class / 舵机控制类
  */
-class DeviceDriverSet_Servo {
+class CamServo {
 public:
     /**
      * @brief Initialize servo motors / 初始化舵机

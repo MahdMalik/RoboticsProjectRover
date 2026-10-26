@@ -12,14 +12,14 @@
 #include "MotionControl.h"
 
 // ========== Hardware Device Objects / 硬件设备对象 ==========
-DeviceDriverSet_MPU6050 AppMPU6050;
-DeviceDriverSet_RGBLED AppRGB_LED;
-DeviceDriverSet_Key AppKey;
-DeviceDriverSet_ITR20001 AppITR20001;
-DeviceDriverSet_Voltage AppVoltage;
-DeviceDriverSet_Motor AppMotor;
-DeviceDriverSet_Ultrasonic AppULTRASONIC;
-DeviceDriverSet_Servo AppServo;
+IMU AppMPU6050;
+RGB_LED AppRGB_LED;
+ButtonDetection AppKey;
+LineTracker AppITR20001;
+VoltageDetection AppVoltage;
+Motor AppMotor;
+Ultrasonic AppULTRASONIC;
+CamServo AppServo;
 
 // ========== Control Objects / 控制对象 ==========
 RgbControl rgbControl(AppRGB_LED);

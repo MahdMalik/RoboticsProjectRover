@@ -20,7 +20,7 @@
  * @brief Initialize the servo motors / 初始化舵机
  * @param positionAngle Initial position angle (0-180 degrees) / 初始位置角度（0-180 度）
  */
-void DeviceDriverSet_Servo::init(unsigned int positionAngle)
+void CamServo::init(unsigned int positionAngle)
 {
     // Initialize servos / 初始化舵机
     servoZ_.attach(PIN_SERVO_Z, 500, 2400); // Z-axis servo with custom pulse width range / 具有自定义脉冲宽度范围的 Z 轴舵机
@@ -35,7 +35,7 @@ void DeviceDriverSet_Servo::init(unsigned int positionAngle)
  * @param positionAngle Target position angle (0-180 degrees) / 目标位置角度（0-180 度）
  * @param delayTime Time to wait for the servo to reach position (milliseconds) / 等待舵机到达位置的时间（毫秒）
  */
-void DeviceDriverSet_Servo::control(unsigned int positionAngle,uint16_t delayTime)
+void CamServo::control(unsigned int positionAngle,uint16_t delayTime)
 {
     servoZ_.attach(PIN_SERVO_Z);
     servoZ_.write(positionAngle);
@@ -47,7 +47,7 @@ void DeviceDriverSet_Servo::control(unsigned int positionAngle,uint16_t delayTim
  * @brief Set Z-axis servo angle without delay / 无延迟设置 Z 轴舵机角度
  * @param positionAngle Target angle position (0-180) / 目标角度位置 (0-180)
  */
-void DeviceDriverSet_Servo::setZAngle(unsigned int positionAngle)
+void CamServo::setZAngle(unsigned int positionAngle)
 {
     servoZ_.attach(PIN_SERVO_Z);
     servoZ_.write(positionAngle);
@@ -57,7 +57,7 @@ void DeviceDriverSet_Servo::setZAngle(unsigned int positionAngle)
  * @brief Get the current angle of the Z-axis servo / 获取 Z 轴舵机的当前角度
  * @return Current servo angle (0-180 degrees) / 当前舵机角度（0-180 度）
  */
-int DeviceDriverSet_Servo::getCurrentAngle(){
+int CamServo::getCurrentAngle(){
     return servoZ_.read();
 }
 
@@ -66,7 +66,7 @@ int DeviceDriverSet_Servo::getCurrentAngle(){
  * @param servo Servo selection (1=Z-axis, 2=Y-axis, 3=both) / 舵机选择 (1=Z 轴, 2=Y 轴, 3=两者)
  * @param positionAngle Simplified angle value (multiplied by 10 internally) / 简化角度值（内部乘以 10）
  */
-void DeviceDriverSet_Servo::controlMultiple(uint8_t servo, unsigned int positionAngle)
+void CamServo::controlMultiple(uint8_t servo, unsigned int positionAngle)
 {
     targetServo_ = servo;
     targetAngle_ = positionAngle;
@@ -76,7 +76,7 @@ void DeviceDriverSet_Servo::controlMultiple(uint8_t servo, unsigned int position
 /**
  * @brief Update servo state machine / 更新舵机状态机
  */
-void DeviceDriverSet_Servo::update()
+void CamServo::update()
 {
     switch (currentState_) {
         case IDLE:
@@ -128,7 +128,7 @@ void DeviceDriverSet_Servo::update()
 /**
  * @brief Detach all servos to prevent jitter and save power / 分离所有舵机以防止抖动并节省电力
  */
-void DeviceDriverSet_Servo::detachServos()
+void CamServo::detachServos()
 {
     servoZ_.detach();
     servoY_.detach();

@@ -15,11 +15,11 @@
 #include <avr/wdt.h>
 #include "Utils.h"
 
-MotionControl::MotionControl(DeviceDriverSet_Motor &motor,
-                             DeviceDriverSet_MPU6050 &mpu,
-                             DeviceDriverSet_Ultrasonic &ultrasonic,
-                             DeviceDriverSet_Servo &servo,
-                             DeviceDriverSet_ITR20001 &itr20001)
+MotionControl::MotionControl(Motor &motor,
+                             IMU &mpu,
+                             Ultrasonic &ultrasonic,
+                             CamServo &servo,
+                             LineTracker &itr20001)
     : AppMotor(motor),
       AppMPU6050(mpu),
       AppULTRASONIC(ultrasonic),

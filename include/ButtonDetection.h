@@ -1,7 +1,10 @@
+#pragma once
+#include "utils.h"
+
 /**
  * @brief Button Detection Class / 按键检测类
  */
-class DeviceDriverSet_Key {
+class ButtonDetection {
 public:
     /**
      * @brief Initialize the button detection module / 初始化按键检测模块

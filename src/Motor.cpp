@@ -3,7 +3,7 @@
 /**
  * @brief Initialize the motor control module / 初始化电机控制模块
  */
-void DeviceDriverSet_Motor::init()
+void Motor::init()
 {
     pinMode(PIN_PWM_RIGHT, OUTPUT);
     pinMode(PIN_PWM_LEFT, OUTPUT);
@@ -13,7 +13,7 @@ void DeviceDriverSet_Motor::init()
 }
 
 
-void DeviceDriverSet_Motor::control(bool directionRight, uint8_t speedRight,
+void Motor::control(bool directionRight, uint8_t speedRight,
                                     bool directionLeft, uint8_t speedLeft)
 {
     digitalWrite(PIN_STBY, HIGH); // Enable motor driver / 启用电机驱动器

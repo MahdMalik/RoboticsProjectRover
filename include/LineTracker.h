@@ -1,7 +1,10 @@
+#pragma once
+#include "utils.h"
+
 /**
  * @brief ITR20001 Line Tracking Sensor Class / ITR20001 循迹传感器类
  */
-class DeviceDriverSet_ITR20001 {
+class LineTracker {
 public:
     /**
      * @brief Initialize the line tracking sensors / 初始化循迹传感器

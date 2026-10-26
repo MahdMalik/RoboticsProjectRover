@@ -11,8 +11,8 @@
 
 #include <Arduino.h>
 #include <FastLED.h>
-#include "DeviceDriverSet.h"
 #include "ApplicationFunctionSet.h" 
+#include "RGB_LED.h"
 
 /**
  * RGB LED Control Class / RGB LED 控制类
@@ -21,7 +21,7 @@ class RgbControl {
 public:
     // ========== Constructor / 构造函数 ==========
     // Constructor / 构造函数
-    RgbControl(DeviceDriverSet_RGBLED &rgbLed);
+    RgbControl(RGB_LED &rgbLed);
     
     // ========== Public Methods / 公共方法 ==========
     // Update LED display / 更新 LED 显示
@@ -35,7 +35,7 @@ public:
 
 private:
     // ========== Hardware Reference / 硬件引用 ==========
-    DeviceDriverSet_RGBLED &rgbLedDevice;
+    RGB_LED &rgbLedDevice;
     
     // ========== Animation Constants / 动画常量 ==========
     static const uint8_t MAX_BRIGHTNESS = 100;        ///< Max brightness / 最大亮度

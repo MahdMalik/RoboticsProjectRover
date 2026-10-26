@@ -1,7 +1,7 @@
 /**
  * @brief Ultrasonic Sensor Class / 超声波传感器类
  */
-class DeviceDriverSet_Ultrasonic {
+class Ultrasonic {
 public:
     /**
      * @brief Initialize the ultrasonic sensor / 初始化超声波传感器

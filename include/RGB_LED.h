@@ -1,7 +1,11 @@
+#pragma once
+#include "Utils.h"
+#include <FastLED.h>
+
 /**
  * @brief RGB LED Control Class / RGB LED 控制类
  */
-class DeviceDriverSet_RGBLED {
+class RGB_LED {
 public:
     /**
      * @brief Initialize the RGB LED module / 初始化 RGB LED 模块

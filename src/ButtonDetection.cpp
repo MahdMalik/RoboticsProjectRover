@@ -5,7 +5,7 @@
 /**
  * @brief Static variable to store the current key value / 存储当前按键值的静态变量
  */
-uint8_t DeviceDriverSet_Key::keyValue_ = 0;
+uint8_t ButtonDetection::keyValue_ = 0;
 
 /**
  * @brief Interrupt handler for button press detection / 按键按下检测的中断处理程序
@@ -17,7 +17,7 @@ static void attachPinChangeInterrupt_GetKeyValue(void)
     const uint32_t debounceDelay = 500; // milliseconds / 毫秒
 
     // Read the state of the button / 读取按键状态
-    int buttonState = digitalRead(DeviceDriverSet_Key::PIN_KEY);
+    int buttonState = digitalRead(ButtonDetection::PIN_KEY);
 
     // Check if the button is pressed (taking into account the pull-up mode) / 检查按键是否被按下（考虑到上拉模式）
     if (buttonState == LOW) {
@@ -29,9 +29,9 @@ static void attachPinChangeInterrupt_GetKeyValue(void)
             lastDebounceTime = currentTime;
 
             // Increment key value and wrap around if necessary / 递增按键值并在必要时回绕
-            DeviceDriverSet_Key::keyValue_++;
-            if (DeviceDriverSet_Key::keyValue_ > DeviceDriverSet_Key::KEY_VALUE_MAX) {
-                DeviceDriverSet_Key::keyValue_ = 0;
+            ButtonDetection::keyValue_++;
+            if (ButtonDetection::keyValue_ > ButtonDetection::KEY_VALUE_MAX) {
+                ButtonDetection::keyValue_ = 0;
             }
         }
     }
@@ -40,7 +40,7 @@ static void attachPinChangeInterrupt_GetKeyValue(void)
 /**
  * @brief Initialize the key/button detection module / 初始化按键检测模块
  */
-void DeviceDriverSet_Key::init()
+void ButtonDetection::init()
 {
     pinMode(PIN_KEY, INPUT_PULLUP);
     attachInterrupt(0, attachPinChangeInterrupt_GetKeyValue, FALLING); // Using interrupt 0 / 使用中断 0
@@ -50,7 +50,7 @@ void DeviceDriverSet_Key::init()
  * @brief Get the current key/button value / 获取当前按键值
  * @param get_keyValue Pointer to store the current key value / 用于存储当前按键值的指针
  */
-void DeviceDriverSet_Key::getKeyValue(uint8_t *get_keyValue)
+void ButtonDetection::getKeyValue(uint8_t *get_keyValue)
 {
   *get_keyValue = keyValue_;
 }

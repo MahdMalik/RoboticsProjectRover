@@ -1,7 +1,7 @@
 /**
  * @brief Motor Control Class / 电机控制类
  */
-class DeviceDriverSet_Motor {
+class Motor {
 public:
     /**
      * @brief Initialize the motor control module / 初始化电机控制模块

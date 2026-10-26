@@ -10,7 +10,7 @@
 
 // ========== Constructor / 构造函数 ==========
 // Constructor / 构造函数
-RgbControl::RgbControl(DeviceDriverSet_RGBLED &rgbLed) 
+RgbControl::RgbControl(RGB_LED &rgbLed) 
     : rgbLedDevice(rgbLed) {
     // Initialize state / 初始化状态
     ledState.brightness = MIN_BRIGHTNESS;

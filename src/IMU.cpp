@@ -13,11 +13,11 @@
 #include <MPU6050.h>
 #include "Wire.h"
 
-static MPU6050_IMU accelgyro;
+static IMU accelgyro;
 
 /*================ MPU6050 Driver / MPU6050 驱动 =================*/
 
-bool MPU6050_IMU::init(void)
+bool IMU::init(void)
 {
   Wire.begin();
   uint8_t chip_id = 0x00;
@@ -36,7 +36,7 @@ bool MPU6050_IMU::init(void)
   return false;
 }
 
-void MPU6050_IMU::calibration(void)
+void IMU::calibration(void)
 {
   unsigned short times = 100; //Sampling times / 采样次数
   for (int i = 0; i < times; i++)
@@ -47,7 +47,7 @@ void MPU6050_IMU::calibration(void)
   gzo /= times; //Calculate gyroscope offset / 计算陀螺仪偏移
 }
 
-void MPU6050_IMU::getEulerAngles(float *Yaw)
+void IMU::getEulerAngles(float *Yaw)
 {
   unsigned long now = millis();           //Record the current time(ms) / 记录当前时间(ms)
   dt = (now - lastTime) / 1000.0;         //Caculate the derivative time(s) / 计算微分时间(s)

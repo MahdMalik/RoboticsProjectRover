@@ -1,7 +1,10 @@
+#pragma once
+#include "Utils.h"
+
 /**
  * @brief Voltage Detection Class / 电压检测类
  */
-class DeviceDriverSet_Voltage {
+class VoltageDetection {
 public:
     /**
      * @brief Initialize the voltage detection module / 初始化电压检测模块

@@ -2,7 +2,11 @@
 #define _MOTION_CONTROL_H_
 
 #include <Arduino.h>
-#include "DeviceDriverSet.h"
+#include "Motor.h"
+#include "IMU.h"
+#include "Ultrasonic.h"
+#include "LineTracker.h"
+#include "CamServo.h"
 
 // Robot car motion control enumeration / 机器人运动控制枚举
 enum CarDirection:uint8_t  {
@@ -30,11 +34,11 @@ public:
      * @param servo Servo driver instance / 舵机驱动实例
      * @param itr20001 Line tracking sensor instance / 循迹传感器实例
      */
-    MotionControl(DeviceDriverSet_Motor &motor, 
-                 DeviceDriverSet_MPU6050 &mpu,
-                 DeviceDriverSet_Ultrasonic &ultrasonic,
-                 DeviceDriverSet_Servo &servo,
-                 DeviceDriverSet_ITR20001 &itr20001);
+    MotionControl(Motor &motor, 
+                 IMU &mpu,
+                 Ultrasonic &ultrasonic,
+                 CamServo &servo,
+                 LineTracker &itr20001);
 
     // Public control interfaces / 公共控制接口
     void SmartRobotCarMotionControl(CarDirection direction,uint8_t speed);
@@ -47,11 +51,11 @@ public:
 
 private:
     // Hardware device references / 硬件设备引用
-    DeviceDriverSet_Motor &AppMotor;
-    DeviceDriverSet_MPU6050 &AppMPU6050;
-    DeviceDriverSet_Ultrasonic &AppULTRASONIC;
-    DeviceDriverSet_Servo &AppServo;
-    DeviceDriverSet_ITR20001 &AppITR20001;
+    Motor &AppMotor;
+    IMU &AppMPU6050;
+    Ultrasonic &AppULTRASONIC;
+    CamServo &AppServo;
+    LineTracker &AppITR20001;
 
 
     //=============== Straight Line Motion PID / 直线运动 PID ===============//

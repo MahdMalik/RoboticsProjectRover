@@ -2,7 +2,7 @@
 /**
  * @brief Initialize the ultrasonic distance sensor / 初始化超声波距离传感器
  */
-void DeviceDriverSet_Ultrasonic::init()
+void Ultrasonic::init()
 {
     pinMode(ECHO_PIN, INPUT); //Ultrasonic module initialization / 超声波模块初始化
     pinMode(TRIG_PIN, OUTPUT);
@@ -12,7 +12,7 @@ void DeviceDriverSet_Ultrasonic::init()
  * @brief Measure distance using the ultrasonic sensor / 使用超声波传感器测量距离
  * @param distance Pointer to store the measured distance in centimeters / 用于存储测量距离（厘米）的指针
  */
-void DeviceDriverSet_Ultrasonic::getDistance(uint16_t *distance) const
+void Ultrasonic::getDistance(uint16_t *distance) const
 {
     digitalWrite(TRIG_PIN, LOW);
     delayMicroseconds(2);

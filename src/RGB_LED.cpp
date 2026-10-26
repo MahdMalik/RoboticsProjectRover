@@ -4,7 +4,7 @@
  * @brief Initialize the RGB LED module / 初始化 RGB LED 模块
  * @param brightness Initial brightness level (0-255) / 初始亮度级别 (0-255)
  */
-void DeviceDriverSet_RGBLED::init(uint8_t brightness)
+void RGB_LED::init(uint8_t brightness)
 {
     FastLED.addLeds<NEOPIXEL, PIN_RGBLED>(leds_, NUM_LEDS);
     FastLED.setBrightness(brightness);
@@ -15,7 +15,7 @@ void DeviceDriverSet_RGBLED::init(uint8_t brightness)
  * @param Traversal_Number Number of LEDs to set (from index 0) / 要设置的 LED 数量（从索引 0 开始）
  * @param colour The color to set for all specified LEDs / 为所有指定 LED 设置的颜色
  */
-void DeviceDriverSet_RGBLED::SetRBGLED(uint8_t Traversal_Number, CRGB colour)
+void RGB_LED::SetRBGLED(uint8_t Traversal_Number, CRGB colour)
 {
   if (NUM_LEDS < Traversal_Number)
   {
@@ -35,7 +35,7 @@ void DeviceDriverSet_RGBLED::SetRBGLED(uint8_t Traversal_Number, CRGB colour)
  * @param g Green component (0-255) / 绿色分量 (0-255)
  * @param b Blue component (0-255) / 蓝色分量 (0-255)
  */
-void DeviceDriverSet_RGBLED::setColor(uint8_t ledIndex, uint8_t r, uint8_t g, uint8_t b)
+void RGB_LED::setColor(uint8_t ledIndex, uint8_t r, uint8_t g, uint8_t b)
 {
     if (ledIndex >= NUM_LEDS)
     {
@@ -51,7 +51,7 @@ void DeviceDriverSet_RGBLED::setColor(uint8_t ledIndex, uint8_t r, uint8_t g, ui
 /**
  * @brief Clear all RGB LEDs (turn them off) / 清除所有 RGB LED（关闭它们）
  */
-void DeviceDriverSet_RGBLED::clear()
+void RGB_LED::clear()
 {
     FastLED.clear(true);
 }
