@@ -31,6 +31,7 @@ void setup() {
     
     // Initialize serial communication / 初始化串行通信
     
+    
     // Print startup message / 打印启动消息
     Serial.println(F("Smart Robot Car V4.0 - System Ready"));
 }
