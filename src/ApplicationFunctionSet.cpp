@@ -11,6 +11,7 @@
 #include "ButtonDetection.h"
 #include "VoltageDetection.h"
 #include "MotionControl.h"
+#include <SerialComm.h>
 
 // ========== Hardware Device Objects / 硬件设备对象 ==========
 IMU AppMPU6050;
@@ -26,12 +27,14 @@ CamServo AppServo;
 RgbControl rgbControl(AppRGB_LED);
 MotionControl motionControl(AppMotor, AppMPU6050, AppULTRASONIC, AppServo, AppITR20001);
 
+SerialComm serial;
+
 // ========== Global Instance / 全局实例 ==========
 ApplicationFunctionSet applicationFunctionSet;
 
 // ========== Initialization / 初始化 ==========
 
-void ApplicationFunctionSet::init() {
+void ApplicationFunctionSet::init(unsigned long baudRate) {
     // Initialize hardware components / 初始化硬件组件
     AppVoltage.init();
     AppMotor.init();
@@ -40,6 +43,8 @@ void ApplicationFunctionSet::init() {
     AppRGB_LED.init(20);
     AppULTRASONIC.init();
     AppITR20001.init();
+
+    serial.init(baudRate);
 
     // Initialize MPU6050 sensor / 初始化 MPU6050 传感器
     if (AppMPU6050.init()) {
@@ -59,6 +64,26 @@ void ApplicationFunctionSet::init() {
     carDirection = CarDirection::Stop;
     currentState = State::Standby;
     isIrRobotControl = false;
+}
+
+void ApplicationFunctionSet::checkSerial()
+{
+    SerialReturnType returnedData = serial.CheckForData();
+    if(returnedData.dataReturned)
+    {
+        switch(returnedData.messageType)
+        {
+            case ReceivedPacketType::HANDSHAKE:
+            {
+                serial.SendData(SentPacketType::HANDSHAKE_RESPONSE, returnedData.parameterValue);
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
 }
 
 // ========== Core State Management / 核心状态管理 ==========

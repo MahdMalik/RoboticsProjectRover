@@ -15,16 +15,17 @@
 #define START_CHAR '{'       // JSON start identifier / JSON 开始标识符
 #define END_CHAR '}'         // JSON end identifier / JSON 结束标识符
 #define TIMEOUT_MS 1000      // Receive timeout in milliseconds / 接收超时（毫秒）
+#define BAUD_RATE 115200
 
 // ========== Global Objects / 全局对象 ==========
 extern ApplicationFunctionSet applicationFunctionSet;
 
 
+
 /* Arduino initialization / Arduino 初始化 */
 void setup() {
-    Serial.begin(9600);
     // Initialize application components / 初始化应用程序组件
-    applicationFunctionSet.init();
+    applicationFunctionSet.init(BAUD_RATE);
     
     // Enable watchdog timer for system stability / 启用看门狗定时器以保持系统稳定性
     wdt_enable(WDTO_4S);
@@ -45,6 +46,8 @@ void loop() {
     
     // Update sensor data and process inputs / 更新传感器数据并处理输入
     applicationFunctionSet.updateSensorData();
+
+    applicationFunctionSet.checkSerial();
     
     // Update timers and execute current state / 更新定时器并执行当前状态
     applicationFunctionSet.updateTimer();

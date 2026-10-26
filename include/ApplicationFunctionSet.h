@@ -25,10 +25,12 @@ enum class State : uint8_t {
 class ApplicationFunctionSet {
 public:
     // Initialize all application functions and hardware / 初始化所有应用功能和硬件
-    void init();
+    void init(unsigned long baudRate);
     
     // Check and execute current state / 检查并执行当前状态
     void checkState();
+
+    void checkSerial();
     
     // Update sensor data periodically / 定期更新传感器数据
     void updateSensorData();
