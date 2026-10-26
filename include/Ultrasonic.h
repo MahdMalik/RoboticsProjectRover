@@ -1,3 +1,6 @@
+#pragma once
+#include "Utils.h"
+
 /**
  * @brief Ultrasonic Sensor Class / 超声波传感器类
  */

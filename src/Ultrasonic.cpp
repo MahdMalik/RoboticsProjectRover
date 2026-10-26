@@ -1,3 +1,5 @@
+#include "Ultrasonic.h"
+
 /*================ Ultrasonic Distance Sensor / 超声波距离传感器 =================*/
 /**
  * @brief Initialize the ultrasonic distance sensor / 初始化超声波距离传感器

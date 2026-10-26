@@ -5,13 +5,12 @@
  * @LastEditors: cd
  * @Description: Smart Robot Car V4.0 - Hardware Device Drivers Implementation / 智能机器人小车 V4.0 - 硬件设备驱动实现
  */
-#include "DeviceDriverSet.h"
 // Only enable NEC protocol to save flash and RAM / 仅启用 NEC 协议以节省 Flash 和 RAM
 #define DECODE_NEC
-#include <IRremote.hpp>
 #include <Arduino.h>
 #include "Utils.h"
-#include <MPU6050.h>
+#include "IMU.h"
+#include "CamServo.h"
 #include "Wire.h"
 
 /*================ Servo Motor Control / 舵机控制 =================*/

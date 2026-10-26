@@ -7,13 +7,13 @@
  */
 // Only enable NEC protocol to save flash and RAM / 仅启用 NEC 协议以节省 Flash 和 RAM
 #define DECODE_NEC
-#include <IRremote.hpp>
 #include <Arduino.h>
 #include "Utils.h"
+#include "IMU.h"
 #include <MPU6050.h>
 #include "Wire.h"
 
-static IMU accelgyro;
+static MPU6050 accelgyro;
 
 /*================ MPU6050 Driver / MPU6050 驱动 =================*/
 

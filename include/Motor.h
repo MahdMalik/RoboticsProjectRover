@@ -1,3 +1,6 @@
+#pragma once
+#include "Utils.h"
+
 /**
  * @brief Motor Control Class / 电机控制类
  */

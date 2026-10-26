@@ -7,8 +7,9 @@
  */
 #include <avr/wdt.h>
 #include "ApplicationFunctionSet.h"
-#include "DeviceDriverSet.h"
 #include "RgbControl.h"
+#include "ButtonDetection.h"
+#include "VoltageDetection.h"
 #include "MotionControl.h"
 
 // ========== Hardware Device Objects / 硬件设备对象 ==========

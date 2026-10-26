@@ -1,3 +1,5 @@
+#include "VoltageDetection.h"
+
 /*================ Battery Voltage Detection / 电池电压检测 =================*/
 
 /**
