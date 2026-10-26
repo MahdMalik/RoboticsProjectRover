@@ -34,7 +34,7 @@ void setup() {
     
     
     // Print startup message / 打印启动消息
-    Serial.println(F("Smart Robot Car V4.0 - System Ready"));
+    //Serial.println(F("Smart Robot Car V4.0 - System Ready"));
 }
 
 int timer = 0;
@@ -57,6 +57,6 @@ void loop() {
 
     if(timer == 1000)
     {
-        Serial.println("UPdate!");
+        //Serial.println("UPdate!");
     }
 }

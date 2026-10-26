@@ -48,7 +48,7 @@ void ApplicationFunctionSet::init(unsigned long baudRate) {
 
     // Initialize MPU6050 sensor / 初始化 MPU6050 传感器
     if (AppMPU6050.init()) {
-        Serial.println("MPU6050 initialization failed!");
+        //Serial.println("MPU6050 initialization failed!");
     } else {
         AppMPU6050.calibration();
     }
