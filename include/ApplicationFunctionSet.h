@@ -10,18 +10,13 @@
 
 #include <Arduino.h>
 #include "MotionControl.h"
-#include "ArduinoJson-v6.11.1.h"
 
 /**
  * Robot car operating states enumeration / 机器人小车运行状态枚举
  */
 enum class State : uint8_t {
-    Standby,           ///< Standby mode / 待机模式
-    TraceBased,        ///< Line tracking mode / 循迹模式
-    Follow,            ///< Object following mode / 跟随模式
-    ObstacleAvoidance, ///< Obstacle avoidance mode / 避障模式
-    Rocker,            ///< Remote control mode / 遥控模式
-    DoNothing          ///< Inactive state / 非活动状态
+    Standby,
+    DoNothing
 };
 
 /**
@@ -38,32 +33,9 @@ public:
     // Update sensor data periodically / 定期更新传感器数据
     void updateSensorData();
 
-    // Execute rocker/remote control mode / 执行摇杆/遥控模式
-    void executeRockerMode();
-    
-    // Execute line tracking mode / 执行循迹模式
-    void executeTrackingMode();
-    
-    // Execute obstacle avoidance mode / 执行避障模式
-    void executeObstacleMode();
-    
-    // Execute following mode / 执行跟随模式
-    void executeFollowMode();
-    
     // Execute standby mode / 执行待机模式
     void executeStandbyMode();
-
-    // ========== Input Processing Functions / 输入处理功能 ==========
-    
-    // Process key/button commands / 处理按键/按钮命令
-    void processKeyCommand();
-    
-    // Process IR remote control commands / 处理红外遥控命令
-    void processIRCommand();
-    
-    // Analyze serial port data and execute commands / 分析串口数据并执行命令
-    void analyzeSerialData(const JsonDocument& doc);
-
+        
     // ========== Servo Control / 舵机控制 ==========
     
     // Control servo motor movement / 控制舵机运动
@@ -72,7 +44,7 @@ public:
     // ========== Command Processing Functions / 命令处理功能 ==========
     
     // Process motor control command / 处理电机控制命令
-    void processMotorControl(const JsonDocument &doc);
+    void processMotorControl(uint8_t motorSelection, uint8_t motorSpeed, uint8_t motorDirection);
     
     // Process car control with time limit / 处理带时间限制的小车控制
     void processCarControlTimeLimit(uint8_t direction, uint8_t speed, unsigned long duration);
@@ -94,10 +66,10 @@ public:
     void processCarControl(uint8_t direction, uint8_t speed);
     
     // Handle lighting control commands / 处理灯光控制命令
-    void handleLightingCommand(const JsonDocument &doc);
+    void handleLightingCommand(uint8_t sequence, uint8_t red, uint8_t green, uint8_t blue, unsigned long duration);
     
     // Handle car control commands / 处理小车控制命令
-    void handleCarControlCommand(const JsonDocument &doc);
+    void handleCarControlCommand(uint8_t direction, uint8_t speed, unsigned long duration);
 
     // ========== Timer Functions / 定时器功能 ==========
     
@@ -126,11 +98,6 @@ public:
     
     // Lighting control callback function / 灯光控制回调函数
     void lightingCallback();
-
-    // ========== Public Configuration / 公共配置 ==========
-    
-    /// Remote control speed setting / 遥控速度设置
-    uint8_t rockerCarSpeed = 250;
 
 private:
     // ========== Private Members / 私有成员 ==========

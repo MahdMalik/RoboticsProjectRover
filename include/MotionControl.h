@@ -14,7 +14,7 @@ enum CarDirection:uint8_t  {
     LeftBackward = 6,  // Left Backward / 左后   
     RightForward = 7,  // Right Forward / 右前
     RightBackward = 8, // Right Backward / 右后
-    stop_it = 9        // Stop / 停止
+    Stop = 9        // Stop / 停止
 };
 
 /**
@@ -41,9 +41,6 @@ public:
     void SmartRobotCarLinearMotionControl(CarDirection direction, CarDirection predir,uint8_t speed);
     
     // Functional mode handling interfaces / 功能模式处理接口
-    void HandleTrackingControl();                    // Line tracking mode / 巡线模式
-    void HandleObstacleAvoidance();                  // Obstacle avoidance mode / 避障模式
-    void HandleFollowMode();                         // Follow mode / 跟随模式
     void UpdateTargetYAW();
 
     uint16_t TrackingDetection_THRESHOLD = 400;      // Black/White line threshold / 黑白线阈值

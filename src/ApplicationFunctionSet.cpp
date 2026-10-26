@@ -57,7 +57,7 @@ void ApplicationFunctionSet::init() {
     motorState.isInitialized = true;   // Initialized / 已初始化
 
     // Set initial state / 设置初始状态
-    carDirection = stop_it;
+    carDirection = CarDirection::Stop;
     currentState = State::Standby;
     isIrRobotControl = false;
 }
@@ -87,18 +87,6 @@ void ApplicationFunctionSet::checkState() {
     switch (currentState) {
         case State::Standby:
             executeStandbyMode();
-            break;
-        case State::TraceBased:
-            executeTrackingMode();
-            break;
-        case State::Follow:
-            executeFollowMode();
-            break;
-        case State::ObstacleAvoidance:
-            executeObstacleMode();
-            break;
-        case State::Rocker:
-            executeRockerMode();
             break;
         default:
             break;
@@ -153,32 +141,8 @@ void ApplicationFunctionSet::updateSensorData() {
     isOnGround = !isAboveGround;
 }
 
-// ========== Mode Execution Functions / 模式执行功能 ==========
-
-void ApplicationFunctionSet::executeRockerMode() {
-    motionControl.SmartRobotCarMotionControl(carDirection, rockerCarSpeed);
-}
-
-void ApplicationFunctionSet::executeTrackingMode() {
-    if (isOnGround) {
-        motionControl.HandleTrackingControl();
-    } 
-}
-
-void ApplicationFunctionSet::executeObstacleMode() {
-    if (isOnGround) {
-        motionControl.HandleObstacleAvoidance();
-    } 
-}
-
-void ApplicationFunctionSet::executeFollowMode() {
-    if (isOnGround) {
-        motionControl.HandleFollowMode();
-    } 
-}
-
 void ApplicationFunctionSet::executeStandbyMode() {
-    motionControl.SmartRobotCarMotionControl(stop_it, 0);
+    motionControl.SmartRobotCarMotionControl(CarDirection::Stop, 0);
 }
 
 // ========== Servo Control / 舵机控制 ==========
@@ -223,214 +187,9 @@ void ApplicationFunctionSet::controlServo(uint8_t servoCommand) {
     }
 }
 
-// ========== Input Processing / 输入处理 ==========
-
-void ApplicationFunctionSet::processKeyCommand() {
-    static uint8_t previousKeyValue = 0;
-
-    uint8_t currentKeyValue;
-    AppKey.getKeyValue(&currentKeyValue);
-
-    if (previousKeyValue != currentKeyValue) {
-        previousKeyValue = currentKeyValue;
-        
-        switch (currentKeyValue) {
-            case 0:
-                currentState = State::Standby;
-                break;
-            case 1:
-                currentState = State::TraceBased;
-                break;
-            case 2:
-                currentState = State::ObstacleAvoidance;
-                break;
-            case 3:
-                currentState = State::Follow;
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-void ApplicationFunctionSet::processIRCommand() {
-    uint8_t irButton = 0;
-    static unsigned long lastIRTime = 0;
-    
-    const unsigned long IR_TIMEOUT = 150; 
-
-    // Receive and Process Command / 接收并处理命令
-    if (AppIRrecv.getIRValue(&irButton)) {
-        using IR = DeviceDriverSet_IRrecv; 
-        
-        switch (irButton) {
-            // Movement Control / 移动控制
-            case IR::UP:
-            case IR::DOWN:
-            case IR::LEFT:
-            case IR::RIGHT:
-                currentState = State::Rocker; 
-                lastIRTime = millis();
-                isIrRobotControl = true;
-                
-                if      (irButton == IR::UP)    carDirection = Forward;
-                else if (irButton == IR::DOWN)  carDirection = Backward;
-                else if (irButton == IR::LEFT)  carDirection = Left;
-                else if (irButton == IR::RIGHT) carDirection = Right;
-                break;
-
-            // Mode Selection / 模式选择
-            case IR::OK:    currentState = State::Standby;           break;
-            case IR::NUM_1: currentState = State::TraceBased;        break;
-            case IR::NUM_2: currentState = State::ObstacleAvoidance; break;
-            case IR::NUM_3: currentState = State::Follow;            break;
-
-            // Parameter Adjustment / 参数调整
-            // Tracking Threshold / 循迹阈值
-            case IR::NUM_4: 
-                motionControl.TrackingDetection_THRESHOLD = min(motionControl.TrackingDetection_THRESHOLD + 10, 600); 
-                break;
-            case IR::NUM_5: 
-                motionControl.TrackingDetection_THRESHOLD = 250; 
-                break;
-            case IR::NUM_6: 
-                motionControl.TrackingDetection_THRESHOLD = max(motionControl.TrackingDetection_THRESHOLD - 10, 30); 
-                break;
-
-            // Car Speed / 小车速度
-            case IR::NUM_7: 
-                rockerCarSpeed = min(rockerCarSpeed + 5, 255); 
-                break;
-            case IR::NUM_8: 
-                rockerCarSpeed = 250; 
-                break;
-            case IR::NUM_9: 
-                rockerCarSpeed = max(rockerCarSpeed - 5, 50); 
-                break;
-                
-            default:
-                break;
-        }
-    }
-
-    // Stop if timeout in Rocker mode / 摇杆模式超时停止
-    if (currentState == State::Rocker && isIrRobotControl) {
-        if (millis() - lastIRTime > IR_TIMEOUT) {
-            currentState = State::Standby; 
-            isIrRobotControl = false;
-        }
-    }
-}
-
-// ========== Command Processing / 命令处理 ==========
-
-void ApplicationFunctionSet::analyzeSerialData(const JsonDocument &doc) {
-    uint8_t commandMode = doc["N"];
-    commandSerialNumber = doc["H"];
-
-    switch (commandMode) {
-        case 1: // Motor control mode / 电机控制模式
-            processMotorControl(doc);
-            break;
-        case 2: // Car control mode / 小车控制模式
-        case 3: // Car control with timer / 带定时器的小车控制
-            handleCarControlCommand(doc);
-            break;
-        case 4: // Individual motor speed control / 独立电机速度控制
-            {
-                uint8_t leftSpeed = doc["D1"].as<uint8_t>();
-                uint8_t rightSpeed = doc["D2"].as<uint8_t>();
-                currentState = State::DoNothing;
-                processMotorSpeedControl(leftSpeed, rightSpeed);
-                sendCommandResponse(true);
-            }
-            break;
-        case 5: // Servo control / 舵机控制
-            {
-                currentState = State::DoNothing;
-                uint8_t angle = doc["D2"].as<uint8_t>() / 10;
-                AppServo.control(angle, 0);
-                sendCommandResponse(true);
-            }
-            break;
-        case 7: // Lighting control / 灯光控制
-        case 8: // Lighting control with timer / 带定时器的灯光控制
-            handleLightingCommand(doc);
-            break;
-        case 21: // Ultrasonic sensor status / 超声波传感器状态
-            {
-                currentState = State::DoNothing;
-                getUltrasonicStatus(doc["D1"].as<uint8_t>());
-            }
-            break;
-        case 22: // Line tracking sensor status / 循迹传感器状态
-            {
-                currentState = State::DoNothing;
-                getTrackingSensorStatus(doc["D1"].as<uint8_t>());
-            }
-            break;
-        case 23: // Ground detection status / 地面检测状态
-            {
-                currentState = State::DoNothing;
-                sendResponseData(isOnGround ? "false" : "true");
-            }
-            break;
-        case 100: // Clear all functions - standby / 清除所有功能 - 待机
-            {
-                clearAllFunctions(State::Standby);
-                sendCommandResponse(false);
-            }
-            break;
-        case 101: // Mode switch command / 模式切换命令
-            {
-                uint8_t mode = doc["D1"];
-                currentState = (mode == 1) ? State::TraceBased :
-                              (mode == 2) ? State::ObstacleAvoidance :
-                              (mode == 3) ? State::Follow : State::Standby;
-                sendCommandResponse(false);
-            }
-            break;
-        case 102: // Rocker control mode / 摇杆控制模式
-            {
-                uint8_t rockerDirection = doc["D1"];
-                rockerCarSpeed = doc["D2"].as<uint8_t>();
-                carDirection = static_cast<CarDirection>(rockerDirection);
-                currentState = (carDirection == stop_it) ? State::Standby : State::Rocker;
-                isIrRobotControl = false;
-            }
-            break;
-        case 105: // LED brightness adjustment / LED 亮度调整
-            {
-                uint8_t adjustment = doc["D1"];
-                int16_t brightness = FastLED.getBrightness();
-                brightness += (adjustment == 1) ? 5 : (adjustment == 2) ? -5 : 0;
-                FastLED.setBrightness(constrain(brightness, 0, 255));
-            }
-            break;
-        case 106: // Servo control / 舵机控制
-            {
-                uint8_t servoCommand = doc["D1"].as<uint8_t>();
-                controlServo(servoCommand);
-                sendCommandResponse(false);
-            }
-            break;
-        case 110: // Clear all functions - do nothing / 清除所有功能 - 不做任何操作
-            {
-                clearAllFunctions(State::DoNothing);
-                sendCommandResponse(true);
-            }
-            break;
-        default:
-            break;
-    }
-}
-
 // ========== Motor and Movement Control / 电机和移动控制 ==========
 
-void ApplicationFunctionSet::processMotorControl(const JsonDocument &doc) {
-    uint8_t motorSelection = doc["D1"].as<uint8_t>();
-    uint8_t motorSpeed = doc["D2"].as<uint8_t>();
-    uint8_t motorDirection = doc["D3"].as<uint8_t>();
+void ApplicationFunctionSet::processMotorControl(uint8_t motorSelection, uint8_t motorSpeed, uint8_t motorDirection) {
     
     currentState = State::DoNothing;
 
@@ -507,34 +266,25 @@ void ApplicationFunctionSet::processCarControl(uint8_t direction, uint8_t speed)
 
 // ========== Command Handlers / 命令处理器 ==========
 
-void ApplicationFunctionSet::handleCarControlCommand(const JsonDocument &doc) {
+void ApplicationFunctionSet::handleCarControlCommand(uint8_t direction, uint8_t speed, unsigned long duration) {
     currentState = State::DoNothing;
-    uint8_t direction = doc["D1"].as<uint8_t>();
-    uint8_t speed = doc["D2"].as<uint8_t>();
     
     processCarControl(direction, speed);
     
-    if (doc["N"].as<uint8_t>() == 2) {
+    if (duration != 2) {
         // Timed command / 定时命令
-        unsigned long duration = doc["T"].as<unsigned long>();
         startTimer(duration, this, &ApplicationFunctionSet::carControlCallback);
     } else {
         sendCommandResponse(true);
     }
 }
 
-void ApplicationFunctionSet::handleLightingCommand(const JsonDocument &doc) {
+void ApplicationFunctionSet::handleLightingCommand(uint8_t sequence, uint8_t red, uint8_t green, uint8_t blue, unsigned long duration) {
     currentState = State::DoNothing;
-    uint8_t sequence = doc["D1"].as<uint8_t>();
-    uint8_t red = doc["D2"].as<uint8_t>();
-    uint8_t green = doc["D3"].as<uint8_t>();
-    uint8_t blue = doc["D4"].as<uint8_t>();
-
     rgbControl.executeLightingCommand(sequence, red, green, blue);
     
-    if (doc["N"].as<uint8_t>() == 7) {
+    if (duration != 0) {
         // Timed command / 定时命令
-        unsigned long duration = doc["T"].as<unsigned long>();
         startTimer(duration, this, &ApplicationFunctionSet::lightingCallback);
     } else {
         sendCommandResponse(true);
@@ -584,9 +334,9 @@ void ApplicationFunctionSet::clearAllFunctions(State newState) {
     motorState.speedLeft = 0;
     
     // Stop motors and clear LEDs / 停止电机并清除 LED
-    motionControl.SmartRobotCarMotionControl(stop_it, 0);
+    motionControl.SmartRobotCarMotionControl(CarDirection::Stop, 0);
     AppRGB_LED.clear();
-    carDirection = stop_it;
+    carDirection = CarDirection::Stop;
     currentState = newState;
     isIrRobotControl = false;
 }
@@ -636,7 +386,7 @@ void ApplicationFunctionSet::updateTimer() {
 // ========== Callback Functions / 回调功能 ==========
 
 void ApplicationFunctionSet::carControlCallback() {
-    motionControl.SmartRobotCarMotionControl(stop_it, 0);
+    motionControl.SmartRobotCarMotionControl(CarDirection::Stop, 0);
     sendCommandResponse(true);
 }
 
