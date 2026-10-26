@@ -20,7 +20,6 @@ DeviceDriverSet_Voltage AppVoltage;
 DeviceDriverSet_Motor AppMotor;
 DeviceDriverSet_Ultrasonic AppULTRASONIC;
 DeviceDriverSet_Servo AppServo;
-DeviceDriverSet_IRrecv AppIRrecv;
 
 // ========== Control Objects / 控制对象 ==========
 RgbControl rgbControl(AppRGB_LED);
@@ -38,7 +37,6 @@ void ApplicationFunctionSet::init() {
     AppServo.init(90);
     AppKey.init();
     AppRGB_LED.init(20);
-    AppIRrecv.init();
     AppULTRASONIC.init();
     AppITR20001.init();
 
@@ -345,23 +343,6 @@ bool ApplicationFunctionSet::isWithinRange(long value, long start, long end) {
     return (value >= start && value <= end);
 }
 
-// ========== Communication Functions / 通信功能 ==========
-
-void ApplicationFunctionSet::sendCommandResponse(bool includeSerialNumber) {
-    if (includeSerialNumber && commandSerialNumber) {
-        Serial.write("{");
-        Serial.write(commandSerialNumber);
-        Serial.write("_ok}");
-    } 
-}
-
-void ApplicationFunctionSet::sendResponseData(const char* data) {
-    Serial.write("{");
-    Serial.write(commandSerialNumber);
-    Serial.write("_");
-    Serial.write(data);
-    Serial.write("}");
-}
 
 // ========== Timer Functions / 定时器功能 ==========
 

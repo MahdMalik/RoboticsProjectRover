@@ -88,9 +88,6 @@ private:
         static constexpr uint16_t BACKUP_TURN_DURATION = 500; // Backup turn duration (ms) / 后退后转弯持续时间(ms)
     };
 
-    // Avoidance private methods / 避障私有方法
-    void HandleObstacleAvoidanceStateMachine();
-
     //=============== Follow Mode / 跟随模式相关 ===============//
     static constexpr uint8_t FOLLOW_IDEAL = 25; // Ideal distance / 理想距离
     static constexpr uint8_t FOLLOW_MIN = 10;   // Min distance / 最小距离
@@ -143,9 +140,7 @@ private:
     } trackingState;
     
     // Tracking private methods / 巡线私有方法
-    void handleLineLost();                         // Handle line lost / 处理丢线
     float calculateErrorByTable(int left, int mid, int right); // Table lookup / 查表法
-    void processPIDControl(float error);
 };
 
 #endif
