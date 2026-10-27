@@ -1,46 +1,19 @@
+TO RUN:
 
-This directory is intended for project specific (private) libraries.
-PlatformIO will compile them to static libraries and link into the executable file.
+First just pull the code, then you want to install the platform.io extension on vs code.
 
-The source code of each library should be placed in a separate directory
-("lib/your_library_name/[Code]").
+Then, at the bottom there will be platform.io buttons that look like a 'checkmark' and an 'arrow'. The checkmark is basically to build and compile the project, the 'arrow' basically 'flashes' that code, which sends the code from the computer to the arduino.
 
-For example, see the structure of the following example libraries `Foo` and `Bar`:
+Make sure though you select the right port - you'll see an option to select from multiple ports, you can tell which one it is by unplugging it and seeing if it disappears.
 
-|--lib
-|  |
-|  |--Bar
-|  |  |--docs
-|  |  |--examples
-|  |  |--src
-|  |     |- Bar.c
-|  |     |- Bar.h
-|  |  |- library.json (optional. for custom build options, etc) https://docs.platformio.org/page/librarymanager/config.html
-|  |
-|  |--Foo
-|  |  |- Foo.c
-|  |  |- Foo.h
-|  |
-|  |- README --> THIS FILE
-|
-|- platformio.ini
-|--src
-   |- main.c
+Speaking of which to actually connect the arduino via USB, you can use that light blue cable, but don't enable the switch wrapped in yellow and black tape. Instead, just plug one end into your computer, and the other to the arduino. It shouldn't turn on - this is because the wire doesn't give power to the arduino.
 
-Example contents of `src/main.c` using Foo and Bar:
-```
-#include <Foo.h>
-#include <Bar.h>
+Next though, now turn on the arduino's power which is found under the pizza plate. Now you should be seeing the arduino powered, and if you click the port icon at the bottom of yoru screen, you should be able to sleect it. Then, just build and flash!
 
-int main (void)
-{
-  ...
-}
+You can't really do any normal printing though with the arduino like you'd expect with other software. Normally you can if youre arduino is connected to your computer via USB, but obviously we'll be connecting the arduino to the jetson instead. What you can do instead is  send debug commands through the serial connection to the jetson and display them.
 
-```
+As for the files you'll need to look at, it'll mainly be main.cpp, SerialComm.cpp, MotionControl.cpp, Motor.cpp, and ApplicaitonFunction.cpp. Maybe you'll need to look at IMU.cpp as well.
 
-The PlatformIO Library Dependency Finder will find automatically dependent
-libraries by scanning project source files.
+Try to use the functions that already exist cause I left some useful functions inside the repo.
 
-More information about PlatformIO Library Dependency Finder
-- https://docs.platformio.org/page/librarymanager/ldf.html
+Finally, you can check the jetson's README hwo to enable to serial connection from its side.

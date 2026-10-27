@@ -4,7 +4,7 @@
 enum class ReceivedPacketType : uint8_t {
     HANDSHAKE = 0x00,
     MOVE_FORWARD = 0x01,
-    MOVE_BACKWWARD = 0x02,
+    MOVE_BACKWARD = 0x02,
     TURN_STATIONARY = 0x03,
     STOP = 0x04
 };
