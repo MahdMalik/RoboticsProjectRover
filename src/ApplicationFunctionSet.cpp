@@ -65,23 +65,389 @@ void ApplicationFunctionSet::init(unsigned long baudRate) {
     currentState = State::Standby;
     isIrRobotControl = false;
 }
+// ---- settings, tune on the floor ----
+// drive and turn motor speed
+const uint8_t DRIVE_SPEED = 140;
+const uint8_t TURN_SPEED = 150;
+// run time in milliseconds per cm driven
+const unsigned long MS_PER_CM = 40;
+// run time in milliseconds per degree turned
+const unsigned long MS_PER_DEGREE = 14;
+const unsigned long MAX_RUN_MS = 5000;
+const unsigned long LOAD_TIMEOUT_MS = 200;
+const uint8_t MAX_STEPS = 8;
+const float TURN_COAST_DEG = 2.0;
+
+const uint8_t FAIL_BAD_BATCH = 1;
+const uint8_t FAIL_LOAD_TIMEOUT = 2;
+const uint8_t FAIL_SAFETY_STOP = 3;
+
+// ---- gyro hooks ----
+// Stubs for now, so every turn is timed. Fill in later with AppMPU6050.getEulerAngles().
+static bool gyroTried = false;
+static bool gyroReady = false;
+static bool turnTracking = false;
+static float turnAccumDeg = 0;
+
+static void gyroInit()
+{
+    gyroTried = true;
+    gyroReady = false;
+}
+
+static void gyroTick()
+{
+}
+
+// ---- plan queue and motion ----
+struct PlanStep
+{
+    uint8_t command;
+    uint8_t amount;
+};
+
+static PlanStep plan[MAX_STEPS];
+static uint8_t planCount = 0;
+static uint8_t planNext = 0;
+static uint8_t stepsDone = 0;
+static bool planActive = false;
+
+static bool loading = false;
+static uint8_t loadExpected = 0;
+static uint8_t loadGot = 0;
+static unsigned long loadDeadlineMs = 0;
+
+static bool motionActive = false;
+static bool motionIsPlanStep = false;
+static bool motionBounded = false;
+static bool motionIsTurn = false;
+static uint8_t motionCommand = 0;
+static uint8_t motionAmount = 0;
+static unsigned long motionEndMs = 0;
+
+static bool partialOpen = false;
+static unsigned long partialSinceMs = 0;
+
+static void stopMotors()
+{
+    motionControl.SmartRobotCarMotionControl(CarDirection::Stop, 0);
+    motionActive = false;
+    turnTracking = false;
+}
+
+// drops the running plan and any motion, reports it if a plan was running
+static void preempt()
+{
+    if (planActive)
+    {
+        serial.SendData(SentPacketType::BATCH_CANCELLED, stepsDone);
+    }
+    planActive = false;
+    planCount = 0;
+    planNext = 0;
+    stepsDone = 0;
+    stopMotors();
+}
+
+static bool amountIsValid(uint8_t command, uint8_t amount, bool allowZero)
+{
+    if (amount == 0)
+    {
+        return allowZero;
+    }
+    if (command == (uint8_t) ReceivedPacketType::TURN_LEFT || command == (uint8_t) ReceivedPacketType::TURN_RIGHT)
+    {
+        return amount <= 180;
+    }
+    return true;
+}
+
+static bool isMoveCommand(uint8_t command)
+{
+    return command == (uint8_t) ReceivedPacketType::MOVE_FORWARD
+        || command == (uint8_t) ReceivedPacketType::MOVE_BACKWARD
+        || command == (uint8_t) ReceivedPacketType::TURN_LEFT
+        || command == (uint8_t) ReceivedPacketType::TURN_RIGHT;
+}
+
+static void beginMove(uint8_t command, uint8_t amount, bool isPlanStep)
+{
+    CarDirection direction = CarDirection::Forward;
+    uint8_t speed = DRIVE_SPEED;
+    unsigned long msPerUnit = MS_PER_CM;
+    bool isTurn = false;
+
+    if (command == (uint8_t) ReceivedPacketType::MOVE_BACKWARD)
+    {
+        direction = CarDirection::Backward;
+    }
+    else if (command == (uint8_t) ReceivedPacketType::TURN_LEFT)
+    {
+        direction = CarDirection::Left;
+        speed = TURN_SPEED;
+        msPerUnit = MS_PER_DEGREE;
+        isTurn = true;
+    }
+    else if (command == (uint8_t) ReceivedPacketType::TURN_RIGHT)
+    {
+        direction = CarDirection::Right;
+        speed = TURN_SPEED;
+        msPerUnit = MS_PER_DEGREE;
+        isTurn = true;
+    }
+
+    motionControl.SmartRobotCarMotionControl(direction, speed);
+    motionActive = true;
+    motionIsPlanStep = isPlanStep;
+    motionIsTurn = isTurn;
+    motionCommand = command;
+    motionAmount = amount;
+
+    turnTracking = false;
+    if (isTurn && gyroReady)
+    {
+        turnAccumDeg = 0;
+        turnTracking = true;
+    }
+
+    if (amount == 0)
+    {
+        // run until STOP, safety stop after MAX_RUN_MS
+        motionBounded = false;
+        motionEndMs = millis() + MAX_RUN_MS;
+        serial.SendData(SentPacketType::ACTION_SUCCESS, command);
+    }
+    else
+    {
+        motionBounded = true;
+        unsigned long runMs = (unsigned long) amount * msPerUnit;
+        if (turnTracking)
+        {
+            // gyro should end the turn first, the time is only a cap
+            runMs = runMs * 3 / 2;
+        }
+        motionEndMs = millis() + runMs;
+    }
+}
+
+static void startNextStep()
+{
+    PlanStep step = plan[planNext];
+    planNext++;
+    beginMove(step.command, step.amount, true);
+}
+
+static void finishMotion(bool ok)
+{
+    bool wasTurn = motionIsTurn;
+    bool wasTracking = turnTracking;
+    stopMotors();
+
+    if (wasTurn && wasTracking)
+    {
+        float measured = turnAccumDeg;
+        if (measured > 255)
+        {
+            measured = 255;
+        }
+        serial.SendData(SentPacketType::TURN_MEASURED, (uint8_t) measured);
+    }
+
+    if (motionIsPlanStep)
+    {
+        stepsDone++;
+        serial.SendData(SentPacketType::ACTION_SUCCESS, stepsDone);
+        if (planNext < planCount)
+        {
+            startNextStep();
+        }
+        else
+        {
+            serial.SendData(SentPacketType::BATCH_DONE, planCount);
+            planActive = false;
+        }
+    }
+    else if (ok)
+    {
+        serial.SendData(SentPacketType::ACTION_SUCCESS, motionCommand);
+    }
+    else
+    {
+        serial.SendData(SentPacketType::ACTION_FAILED, FAIL_SAFETY_STOP);
+    }
+}
+
+// reads one 2 byte packet, drops a lone byte that waits longer than the load timeout
+static bool readPacket(uint8_t &type, uint8_t &param)
+{
+    int available = Serial.available();
+    if (available >= 2)
+    {
+        type = (uint8_t) Serial.read();
+        param = (uint8_t) Serial.read();
+        partialOpen = false;
+        return true;
+    }
+    if (available == 1)
+    {
+        if (!partialOpen)
+        {
+            partialOpen = true;
+            partialSinceMs = millis();
+        }
+        else if (millis() - partialSinceMs >= LOAD_TIMEOUT_MS)
+        {
+            Serial.read();
+            partialOpen = false;
+        }
+    }
+    else
+    {
+        partialOpen = false;
+    }
+    return false;
+}
+
+static void abortLoading(uint8_t reason)
+{
+    loading = false;
+    planCount = 0;
+    serial.SendData(SentPacketType::ACTION_FAILED, reason);
+}
+
+static void handleLoadPacket(uint8_t type, uint8_t param)
+{
+    if (type == (uint8_t) ReceivedPacketType::HANDSHAKE)
+    {
+        serial.SendData(SentPacketType::HANDSHAKE_RESPONSE, param);
+        return;
+    }
+    if (type == (uint8_t) ReceivedPacketType::STOP)
+    {
+        loading = false;
+        planCount = 0;
+        serial.SendData(SentPacketType::ACTION_SUCCESS, (uint8_t) ReceivedPacketType::STOP);
+        return;
+    }
+    if (!isMoveCommand(type) || !amountIsValid(type, param, false))
+    {
+        abortLoading(FAIL_BAD_BATCH);
+        return;
+    }
+
+    plan[loadGot].command = type;
+    plan[loadGot].amount = param;
+    loadGot++;
+    loadDeadlineMs = millis() + LOAD_TIMEOUT_MS;
+
+    if (loadGot == loadExpected)
+    {
+        loading = false;
+        planCount = loadExpected;
+        planNext = 0;
+        stepsDone = 0;
+        planActive = true;
+        serial.SendData(SentPacketType::BATCH_ACCEPTED, planCount);
+        startNextStep();
+    }
+}
 
 void ApplicationFunctionSet::checkSerial()
 {
-    SerialReturnType returnedData = serial.CheckForData();
-    if(returnedData.dataReturned)
+    // gyro setup runs once, at boot while the car is still (still need to test this later guys...)
+    if (!gyroTried)
     {
-        switch(returnedData.messageType)
+        gyroInit();
+    }
+
+    // a partial batch that stalls is trashed and triggers a load timeout failure
+    if (loading && (long) (millis() - loadDeadlineMs) >= 0)
+    {
+        abortLoading(FAIL_LOAD_TIMEOUT);
+    }
+
+    // end the running move
+    if (motionActive)
+    {
+        gyroTick();
+        bool done = false;
+        if (turnTracking && motionBounded && turnAccumDeg >= (float) motionAmount - TURN_COAST_DEG)
         {
-            case ReceivedPacketType::HANDSHAKE:
+            done = true;
+        }
+        else if ((long) (millis() - motionEndMs) >= 0)
+        {
+            done = true;
+        }
+        if (done)
+        {
+            finishMotion(motionBounded);
+        }
+    }
+
+    uint8_t type = 0;
+    uint8_t param = 0;
+    if (!readPacket(type, param))
+    {
+        return;
+    }
+
+    if (loading && type != (uint8_t) ReceivedPacketType::BATCH_BEGIN)
+    {
+        handleLoadPacket(type, param);
+        return;
+    }
+
+    switch ((ReceivedPacketType) type)
+    {
+        case ReceivedPacketType::HANDSHAKE:
+        {
+            serial.SendData(SentPacketType::HANDSHAKE_RESPONSE, param);
+            break;
+        }
+        case ReceivedPacketType::MOVE_FORWARD:
+        case ReceivedPacketType::MOVE_BACKWARD:
+        case ReceivedPacketType::TURN_LEFT:
+        case ReceivedPacketType::TURN_RIGHT:
+        {
+            if (!amountIsValid(type, param, true))
             {
-                serial.SendData(SentPacketType::HANDSHAKE_RESPONSE, returnedData.parameterValue);
+                serial.SendData(SentPacketType::ACTION_FAILED, FAIL_BAD_BATCH);
                 break;
             }
-            default:
+            currentState = State::DoNothing;
+            loading = false;
+            preempt();
+            beginMove(type, param, false);
+            break;
+        }
+        case ReceivedPacketType::BATCH_BEGIN:
+        {
+            currentState = State::DoNothing;
+            loading = false;
+            preempt();
+            if (param < 1 || param > MAX_STEPS)
             {
+                serial.SendData(SentPacketType::ACTION_FAILED, FAIL_BAD_BATCH);
                 break;
             }
+            loading = true;
+            loadExpected = param;
+            loadGot = 0;
+            loadDeadlineMs = millis() + LOAD_TIMEOUT_MS;
+            break;
+        }
+        case ReceivedPacketType::STOP:
+        {
+            currentState = State::DoNothing;
+            loading = false;
+            preempt();
+            serial.SendData(SentPacketType::ACTION_SUCCESS, (uint8_t) ReceivedPacketType::STOP);
+            break;
+        }
+        default:
+        {
+            break;
         }
     }
 }

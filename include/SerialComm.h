@@ -5,15 +5,20 @@ enum class ReceivedPacketType : uint8_t {
     HANDSHAKE = 0x00,
     MOVE_FORWARD = 0x01,
     MOVE_BACKWARD = 0x02,
-    TURN_STATIONARY = 0x03,
-    STOP = 0x04
+    TURN_LEFT = 0x03,
+    STOP = 0x04,
+    TURN_RIGHT = 0x05,
+    BATCH_BEGIN = 0x06
 };
 
-enum class SentPacketType: uint8_t
-{
+enum class SentPacketType : uint8_t {
     HANDSHAKE_RESPONSE = 0x00,
     ACTION_SUCCESS = 0x01,
-    ACTION_FAILED = 0x02
+    ACTION_FAILED = 0x02,
+    BATCH_ACCEPTED = 0x03,
+    BATCH_DONE = 0x04,
+    BATCH_CANCELLED = 0x05,
+    TURN_MEASURED = 0x06
 };
 
 struct SerialReturnType
@@ -37,7 +42,7 @@ Then finally one like STOP? with no angle so just garbage for that byte value.
 Here it looks like i only need messages of 2 bytes?
 */
 
-const uint8_t SENT_MESSAGE_SIZE = 2; 
+const uint8_t SENT_MESSAGE_SIZE = 2;
 const uint8_t RECEIVED_MESSAGE_SIZE = 2;
 
 class SerialComm
